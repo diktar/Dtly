@@ -2,6 +2,7 @@ using System.Data.Common;
 using System.Net.Http.Json;
 using App.Dto;
 using Domain.Entities;
+using Dorssel.EntityFrameworkCore;
 using FluentAssertions;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -26,7 +27,8 @@ public class EventControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
             {
                 // Replace DbContext with in-memory SQLite for testing
                 services.AddDbContext<AppDbContext>(options =>
-                    options.UseSqlite("Data Source=TestCalendar.db"));
+                    options.UseSqlite("Data Source=TestCalendar.db")
+                    .UseSqliteTimestamp());
             });
         });
 
@@ -54,7 +56,7 @@ public class EventControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
             EndTime = DateTime.UtcNow.AddHours(1),
             Attendees = new List<AttendeeDto>
             {
-                new() { Name = "John Doe", Email = "john@example.com", IsAttending = true }
+                new() {Name = "John Doe", Email = "john@example.com", IsAttending = true}
             }
         };
 
@@ -114,8 +116,16 @@ public class EventControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             dbContext.Events.AddRange(
-                new Event { Title = "Event 1", Description = "Desc 1", StartTime = DateTime.UtcNow, EndTime = DateTime.UtcNow.AddHours(1) },
-                new Event { Title = "Event 2", Description = "Desc 2", StartTime = DateTime.UtcNow, EndTime = DateTime.UtcNow.AddHours(2) }
+                new Event
+                {
+                    Title = "Event 1", Description = "Desc 1", StartTime = DateTime.UtcNow,
+                    EndTime = DateTime.UtcNow.AddHours(1)
+                },
+                new Event
+                {
+                    Title = "Event 2", Description = "Desc 2", StartTime = DateTime.UtcNow,
+                    EndTime = DateTime.UtcNow.AddHours(2)
+                }
             );
             await dbContext.SaveChangesAsync();
         }
@@ -166,62 +176,111 @@ public class EventControllerTests : IClassFixture<CustomWebApplicationFactory<Pr
     }
 
     [Fact]
-public async Task UpdateEvent_ShouldModifyEventInDatabase()
-{
-    // Arrange
-    Guid eventId;
-    using (var scope = _serviceProvider.CreateScope())
+    public async Task UpdateEvent_ShouldModifyEventInDatabase()
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var calendarEvent = new Event
+        // Arrange
+        Guid eventId;
+        using (var scope = _serviceProvider.CreateScope())
         {
-            Title = "Original Event",
-            Description = "Original Description",
-            StartTime = DateTime.UtcNow,
-            EndTime = DateTime.UtcNow.AddHours(1)
-        };
-        dbContext.Events.Add(calendarEvent);
-        await dbContext.SaveChangesAsync();
-        eventId = calendarEvent.Id;
-    }
-
-    // Prepare updated DTO
-    var updatedEventDto = new EventDto
-    {
-        Title = "Updated Event",
-        Description = "Updated Description",
-        StartTime = DateTime.UtcNow.AddDays(1), // Change StartTime
-        EndTime = DateTime.UtcNow.AddDays(1).AddHours(1), // Change EndTime
-        Attendees = new List<AttendeeDto>
-        {
-            new() { Name = "Jane Doe", Email = "jane@example.com", IsAttending = true }
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var calendarEvent = new Event
+            {
+                Title = "Original Event",
+                Description = "Original Description",
+                StartTime = DateTime.UtcNow,
+                EndTime = DateTime.UtcNow.AddHours(1)
+            };
+            dbContext.Events.Add(calendarEvent);
+            await dbContext.SaveChangesAsync();
+            eventId = calendarEvent.Id;
         }
-    };
 
-    // Act
-    var response = await _client.PutAsJsonAsync($"/api/Event/{eventId}", updatedEventDto);
+        // Prepare updated DTO
+        var updatedEventDto = new EventDto
+        {
+            Title = "Updated Event",
+            Description = "Updated Description",
+            StartTime = DateTime.UtcNow.AddDays(1), // Change StartTime
+            EndTime = DateTime.UtcNow.AddDays(1).AddHours(1), // Change EndTime
+            Attendees = new List<AttendeeDto>
+            {
+                new() {Name = "Jane Doe", Email = "jane@example.com", IsAttending = true}
+            }
+        };
 
-    // Assert
-    response.EnsureSuccessStatusCode();
-    var updatedEvent = await response.Content.ReadFromJsonAsync<EventDto>();
-    updatedEvent.Should().NotBeNull();
-    updatedEvent!.Title.Should().Be("Updated Event");
-    updatedEvent.Description.Should().Be("Updated Description");
+        // Act
+        var response = await _client.PutAsJsonAsync($"/api/Event/{eventId}", updatedEventDto);
 
-    // Verify changes in the database
-    using (var scope = _serviceProvider.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var dbEvent = await dbContext.Events
-            .Include(@event => @event.Attendees)
-            .FirstAsync(@event => @event.Id == eventId);
-        dbEvent.Should().NotBeNull();
-        dbEvent!.Title.Should().Be("Updated Event");
-        dbEvent.Description.Should().Be("Updated Description");
-        dbEvent.StartTime.Should().Be(updatedEventDto.StartTime);
-        dbEvent.EndTime.Should().Be(updatedEventDto.EndTime);
-        dbEvent.Attendees.Count.Should().Be(1);
-        dbEvent.Attendees[0].Name.Should().Be("Jane Doe");
+        // Assert
+        response.EnsureSuccessStatusCode();
+        var updatedEvent = await response.Content.ReadFromJsonAsync<EventDto>();
+        updatedEvent.Should().NotBeNull();
+        updatedEvent!.Title.Should().Be("Updated Event");
+        updatedEvent.Description.Should().Be("Updated Description");
+
+        // Verify changes in the database
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var dbEvent = await dbContext.Events
+                .Include(@event => @event.Attendees)
+                .FirstAsync(@event => @event.Id == eventId);
+            dbEvent.Should().NotBeNull();
+            dbEvent!.Title.Should().Be("Updated Event");
+            dbEvent.Description.Should().Be("Updated Description");
+            dbEvent.StartTime.Should().Be(updatedEventDto.StartTime);
+            dbEvent.EndTime.Should().Be(updatedEventDto.EndTime);
+            dbEvent.Attendees.Count.Should().Be(1);
+            dbEvent.Attendees[0].Name.Should().Be("Jane Doe");
+        }
     }
-}
+    
+    [Fact]
+    public async Task UpdateEvent_ShouldDetectConcurrencyConflict()
+    {
+        // Arrange
+        Guid eventId;
+        byte[] originalRowVersion;
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var calendarEvent = new Event
+            {
+                Title = "Original Event",
+                Description = "Original Description",
+                StartTime = DateTime.UtcNow,
+                EndTime = DateTime.UtcNow.AddHours(1)
+            };
+            dbContext.Events.Add(calendarEvent);
+            await dbContext.SaveChangesAsync();
+
+            eventId = calendarEvent.Id;
+            originalRowVersion = calendarEvent.RowVersion;
+        }
+
+        // Update the event to create a conflict
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var calendarEvent = await dbContext.Events.FindAsync(eventId);
+            calendarEvent.Title = "Updated by Another User";
+            await dbContext.SaveChangesAsync();
+        }
+
+        // Prepare the conflicting update DTO
+        var conflictingDto = new EventDto
+        {
+            Title = "Conflict Update",
+            Description = "Conflict Description",
+            StartTime = DateTime.UtcNow,
+            EndTime = DateTime.UtcNow.AddHours(2),
+            RowVersion = originalRowVersion // Old version
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/api/Event/{eventId}", conflictingDto);
+
+        // Assert
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.Conflict);
+    }
 }

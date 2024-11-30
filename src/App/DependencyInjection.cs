@@ -1,7 +1,4 @@
-﻿using App.Interfaces;
-using App.Mappings;
-using App.Services;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,7 +15,5 @@ public static class DependencyInjection
             .AddValidatorsFromAssembly(assembly);
         
         services.AddAutoMapper(assembly);
-        
-        services.AddScoped<IEventService, EventService>();
     }
 }

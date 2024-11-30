@@ -1,4 +1,5 @@
 ﻿using Domain.Interfaces;
+using Dorssel.EntityFrameworkCore;
 using Infrastructure.Data;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,9 @@ public static class DependencyInjection
     {
         // Configure SQLite
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite("Data Source=calendar.db"));
+            options
+                .UseSqlite("Data Source=calendar.db")
+                .UseSqliteTimestamp());
         
         services.AddScoped<IEventRepository, EventRepository>();
     }

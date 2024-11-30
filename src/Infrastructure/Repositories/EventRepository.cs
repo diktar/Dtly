@@ -28,8 +28,28 @@ public class EventRepository : IEventRepository
 
     public async Task UpdateAsync(Event calendarEvent)
     {
-        _context.Events.Update(calendarEvent);
-        await _context.SaveChangesAsync();
+        try
+        {
+            _context.Events.Update(calendarEvent);
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            foreach (var entry in ex.Entries)
+            {
+                if (entry.Entity is Event)
+                {
+                    var databaseValues = await entry.GetDatabaseValuesAsync();
+                    if (databaseValues == null)
+                    {
+                        throw new DbUpdateConcurrencyException("The event has been deleted.");
+                    }
+
+                    var databaseEntity = databaseValues.ToObject() as Event;
+                    throw new DbUpdateConcurrencyException($"Concurrency conflict: {databaseEntity?.Title}");
+                }
+            }
+        }
     }
 
     public async Task DeleteAsync(Guid id)

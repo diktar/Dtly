@@ -11,4 +11,6 @@ public class EventDto
     public DateTime EndTime { get; set; }
     
     public List<AttendeeDto> Attendees { get; set; } = new();
+    
+    public byte[] RowVersion { get; set; }
 }

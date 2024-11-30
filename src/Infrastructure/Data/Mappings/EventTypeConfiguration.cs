@@ -33,5 +33,9 @@ public class EventTypeConfiguration : IEntityTypeConfiguration<Event>
         builder
             .HasMany(e => e.Attendees)
             .WithOne();
+        
+        builder.Property(e => e.RowVersion)
+            .IsRequired()
+            .IsRowVersion(); // Concurrency token
     }
 }

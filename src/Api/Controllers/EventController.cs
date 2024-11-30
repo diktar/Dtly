@@ -3,6 +3,7 @@ using App.Dto;
 using App.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Api.Controllers;
@@ -59,9 +60,15 @@ public class EventController : ControllerBase
     [SwaggerResponse(404, "Event not found")]
     public async Task<IActionResult> UpdateEvent(Guid id, [FromBody] EventDto eventDto)
     {
-        var updatedEvent = await _mediator.Send(new UpdateEventCommand(id, eventDto));
-        
-        return Ok(updatedEvent);
+        try
+        {
+            var updatedEvent = await _mediator.Send(new UpdateEventCommand(id, eventDto));
+            return Ok(updatedEvent);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id}")]

@@ -1,4 +1,6 @@
-﻿namespace Domain.Entities;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Domain.Entities;
 
 public class Event
 {
@@ -13,4 +15,7 @@ public class Event
     public DateTime EndTime { get; set; }
     
     public List<Attendee> Attendees { get; set; } = new();
+    
+    [Timestamp]
+    public byte[] RowVersion { get; set; }
 }
