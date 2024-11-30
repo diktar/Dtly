@@ -12,7 +12,7 @@ public static class DependencyInjection
     public static void AddInfrastructure(IServiceCollection services, IConfiguration configuration)
     {
         // Configure SQLite
-        services.AddDbContextPool<AppDbContext>(options =>
+        services.AddDbContext<AppDbContext>(options =>
             options.UseSqlite("Data Source=calendar.db"));
         
         services.AddScoped<IEventRepository, EventRepository>();

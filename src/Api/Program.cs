@@ -1,7 +1,3 @@
-using Domain.Interfaces;
-using Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
-
 // var builder = WebApplication.CreateBuilder(args);
 //
 // // Add services to the container.
@@ -46,3 +42,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// hack needed for tests
+public partial class Program { }

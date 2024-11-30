@@ -26,7 +26,7 @@ public class EventController : ControllerBase
     {
         var createdEvent = await _mediator.Send(new CreateEventCommand(eventDto));
         
-        return CreatedAtAction(nameof(GetEventById), createdEvent);
+        return Ok(createdEvent);
     }
 
     [HttpGet("{id}")]

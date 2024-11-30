@@ -1,0 +1,17 @@
+###
+GET http://localhost:5041/api/Event
+
+###
+GET http://localhost:5041/api/Event
+
+###
+POST http://localhost:5041/api/Event
+
+###
+GET http://localhost:5041/api/Event/{{id}}
+
+###
+PUT http://localhost:5041/api/Event/{{id}}
+
+###
+DELETE http://localhost:5041/api/Event/{{id}}
