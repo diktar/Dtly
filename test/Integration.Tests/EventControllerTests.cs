@@ -1,4 +1,3 @@
-using System.Data.Common;
 using System.Net.Http.Json;
 using App.Dto;
 using Domain.Entities;
@@ -6,20 +5,18 @@ using Dorssel.EntityFrameworkCore;
 using FluentAssertions;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
 
 namespace Integration.Tests;
 
-public class EventControllerTests : IClassFixture<CustomWebApplicationFactory<Program>>
+public class EventControllerTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
     private readonly AppDbContext _dbContext;
     private readonly IServiceProvider _serviceProvider;
 
-    public EventControllerTests(CustomWebApplicationFactory<Program> factory)
+    public EventControllerTests(WebApplicationFactory<Program> factory)
     {
         var webApplicationFactory = factory.WithWebHostBuilder(builder =>
         {

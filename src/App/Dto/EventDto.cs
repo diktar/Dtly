@@ -12,5 +12,5 @@ public class EventDto
     
     public List<AttendeeDto> Attendees { get; set; } = new();
     
-    public byte[] RowVersion { get; set; }
+    public byte[] RowVersion { get; set; } = new byte[8];
 }

@@ -21,7 +21,7 @@ public class EventController : ControllerBase
 
     [HttpPost]
     [SwaggerOperation(Summary = "Creates a new event", Description = "Provide event details to create a new event.")]
-    [SwaggerResponse(201, "Event created successfully")]
+    [SwaggerResponse(200, "Event created successfully")]
     [SwaggerResponse(400, "Invalid input")]
     public async Task<IActionResult> CreateEvent([FromBody] EventDto eventDto)
     {
