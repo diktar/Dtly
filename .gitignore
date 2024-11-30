@@ -1,0 +1,12 @@
+bin/
+obj/
+out/
+!.nuget/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+.idea/
+
+# IDE configuration
+*.userprefs
+*.csproj.user
